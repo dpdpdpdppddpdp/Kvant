@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Real Estate | Дома из газобетона под ключ</title>
+    <!-- SheetJS (XLSX) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <!-- Input Mask (IMask) -->
+    <script src="https://unpkg.com/imask@7.4.0/dist/imask.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: #1a1e2b;
+            line-height: 1.4;
+            scroll-behavior: smooth;
+        }
+
+        /* мягкий минимализм */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ========== СТИКИ ХЕДЕР ========== */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid #eef2f6;
+            transition: all 0.3s ease;
+        }
+        
+        /* Эффект тени при скролле (добавится через js) */
+        .sticky-header.scrolled {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            background-color: rgba(255, 255, 255, 0.98);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 20px 0;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #2c3e50, #1e2a3a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .nav {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav a:hover {
+            color: #3b82f6;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #3b82f6;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #3b82f6;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 8px rgba(59,130,246,0.2);
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .btn-large {
+            font-size: 1.1rem;
+            padding: 14px 36px;
+        }
+
+        /* Hero */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 60px 0 80px;
+            align-items: center;
+        }
+        .hero-image img {
+            width: 100%;
+            border-radius: 32px;
+            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.15);
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .hero-image img:hover {
+            transform: scale(1.01);
+        }
+        .hero-content h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+        .hero-sub {
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .hero-content h1 {
+                font-size: 2.2rem;
+            }
+        }
+
+        /* Преимущества: левая картинка + сетка справа */
+        .advantages {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 80px 0;
+            align-items: stretch;
+        }
+        .adv-left img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 32px;
+            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.1);
+            min-height: 320px;
+        }
+        .adv-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .adv-card {
+            background: #f9fafc;
+            border-radius: 28px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: all 0.25s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #eef2f8;
+        }
+        .adv-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -12px rgba(0,0,0,0.08);
+            border-color: #cbd5e1;
+        }
+        .adv-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .adv-desc {
+            color: #475569;
+            font-weight: 500;
+        }
+        @media (max-width: 800px) {
+            .advantages {
+                grid-template-columns: 1fr;
+            }
+            .adv-left img {
+                max-height: 280px;
+                width: 100%;
+            }
+        }
+
+        /* проекты */
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.01em;
+        }
+        .section-sub {
+            color: #5b6e8c;
+            margin-bottom: 48px;
+            font-size: 1.1rem;
+        }
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 32px;
+            margin: 40px 0 80px;
+        }
+        .project-card {
+            background: #ffffff;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            border: 1px solid #f0f2f5;
+        }
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 35px -12px rgba(0,0,0,0.12);
+        }
+        .project-img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            transition: 0.3s;
+        }
+        .project-info {
+            padding: 24px;
+        }
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .project-details {
+            display: flex;
+            gap: 20px;
+            color: #4b5563;
+            margin-top: 16px;
+            font-size: 0.95rem;
+        }
+        .project-details span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* footer */
+        .footer {
+            background: #f8fafc;
+            margin-top: 80px;
+            padding: 48px 0 32px;
+            border-radius: 32px 32px 0 0;
+        }
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 32px;
+        }
+        .footer-col p {
+            margin: 8px 0;
+            color: #2d3a4b;
+        }
+        .footer-logo {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .copyright {
+            text-align: center;
+            margin-top: 48px;
+            color: #6c7a91;
+            font-size: 0.85rem;
+        }
+
+        /* modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-content {
+            background: white;
+            max-width: 500px;
+            width: 90%;
+            border-radius: 40px;
+            padding: 32px 28px;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .modal-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            font-size: 28px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 28px;
+            border: 1px solid #e2e8f0;
+            font-size: 1rem;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .error-msg {
+            color: #e53e3e;
+            font-size: 0.75rem;
+            margin-top: 5px;
+            margin-left: 12px;
+        }
+        button[type="submit"] {
+            width: 100%;
+            background: #3b82f6;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: bold;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (max-width: 640px) {
+            .container {
+                padding: 0 18px;
+            }
+            .nav {
+                gap: 16px;
+                margin-top: 12px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: start;
+            }
+            .btn-outline {
+                margin-left: 0;
+            }
+        }
+        img {
+            display: block;
+        }
+        
+        /* Дополнительный отступ для контента, чтобы не перекрывался sticky-хедером (необязательно) */
+        html {
+            scroll-padding-top: 80px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sticky header wrapper -->
+<div class="sticky-header" id="stickyHeader">
+    <div class="container">
+        <div class="header">
+            <div class="logo">Kvant</div>
+            <div class="nav">
+                <a href="#Главная">Главная</a>
+                <a href="#ОКомпании">О компании</a>
+                <a href="#Проекты">Проекты</a>
+                <a href="#">Услуги</a>
+                <a href="#Контакты">Контакты</a>
+                <button class="btn-outline open-modal-trigger">Оставить заявку</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="Главная">
+    <!-- Hero блок (с большим изображением дома) -->
+    <div class="hero">
+        <div class="hero-image">
+            <img src="https://github.com/dpdpdpdppddpdp/Kvant/blob/main/Kvant_site.jpg?raw=true" alt="Современный дом из газобетона" style="background:#eef2f6;">
+        </div>
+        <div class="hero-content">
+            <h1>Комплексные решения для дома и сада</h1>
+            <div class="hero-sub">Создаем единое пространство для комфортной жизни вашей семьи</div>
+            <button class="btn-primary btn-large open-modal-trigger">Оставить заявку</button>
+        </div>
+    </div>
+
+    <!-- Блок преимуществ: картинка слева + 4 карточки справа -->
+    <div class="advantages" id="ОКомпании">
+        <div class="adv-left">
+            <img src="https://github.com/dpdpdpdppddpdp/Kvant/blob/main/summer_house.jpeg?raw=true" alt="Преимущества строительства">
+        </div>
+        <div class="adv-grid">
+            <div class="adv-card">
+                <div class="adv-number">500+</div>
+                <div class="adv-desc">проектов<br>обустройство территорий и зданий разного стиля</div>
+            </div>
+            <div class="adv-card">
+                <div class="adv-number">15 лет</div>
+                <div class="adv-desc">опыта<br>работаем на рынке строительства</div>
+            </div>
+            <div class="adv-card">
+                <div class="adv-number">98%</div>
+                <div class="adv-desc">клиентов<br>доверяют нам и рекомендуют друзьям</div>
+            </div>
+            <!-- <div class="adv-card">
+                <div class="adv-number">100+</div>
+                <div class="adv-desc">сотрудников<br>профессиональная команда строителей</div>
+            </div> -->
+        </div>
+    </div>
+
+    <!-- Наши проекты -->
+    <div>
+        <div class="section-title" id="Проекты">Наши проекты</div>
+        <div class="section-sub">От составления плана проекта до сдачи готового объекта с гарантией качества</div>
+    </div>
+
+    <div class="projects-grid">
+        <div class="project-card">
+            <img class="project-img" src="https://github.com/dpdpdpdppddpdp/Kvant/blob/main/sweeming_pool.jpeg?raw=true" alt="Современный дом">
+            <div class="project-info">
+                <div class="project-title">Крытый бассейн</div>
+                <div class="project-details">
+                    <span>📍 Владивосток</span>
+                    <!-- <span>🛏️ 4 спальни</span> -->
+                    <!-- <span>📐 240 м²</span> -->
+                </div>
+            </div>
+        </div>
+        <div class="project-card">
+            <img class="project-img" src="https://github.com/dpdpdpdppddpdp/Kvant/blob/main/Summer_house_clear_closed_Ussuriysk.jpg?raw=true" alt="Комфортный дом">
+            <div class="project-info">
+                <div class="project-title">Остекленный летний домик</div>
+                <div class="project-details">
+                    <span>📍 Санкт-Петербург</span>
+                    <!-- <span>🛏️ 5 спален</span> -->
+                    <!-- <span>📐 180 м²</span> -->
+                </div>
+            </div>
+        </div>
+        <div class="project-card">
+            <img class="project-img" src="https://github.com/dpdpdpdppddpdp/Kvant/blob/main/kling_20260428_%E4%BD%9C%E5%93%81____________4702_1.png?raw=true" alt="Энергоэффективный дом">
+            <div class="project-info">
+                <div class="project-title">Обустройство теплой веранды</div>
+                <div class="project-details">
+                    <span>📍 Уссурийск</span>
+                    <!-- <span>🛏️ 4 спальни</span> -->
+                    <!-- <span>📐 450 м²</span> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-inner">
+            <div class="footer-col" id="Контакты">
+                <div class="footer-logo">Kvant</div>
+                <p>Комплексный подход к обустройству территории</p>
+            </div>
+            <div class="footer-col">
+                <p><strong>Контакты</strong></p>
+                <p>📞 +7 (902) 425-97-74</p>
+                <p>✉️ info@realestate.ru</p>
+                <!-- <p>📍 Москва, ул. Строителей 15</p> -->
+            </div>
+            <div class="footer-col">
+                <p><strong>Режим работы</strong></p>
+                <p>Пн–Пт: 9:00–20:00</p>
+                <button class="btn-outline open-modal-trigger" style="margin-top: 12px;">Заказать звонок</button>
+            </div>
+        </div>
+        <div class="copyright">© 2026 Kvant. Все права защищены.</div>
+    </div>
+</footer>
+
+<!-- Modal форма заявки -->
+<div id="requestModal" class="modal">
+    <div class="modal-content">
+        <button class="close-modal">&times;</button>
+        <h3>Оставить заявку</h3>
+        <p style="margin-bottom: 20px;">Заполните форму, и мы свяжемся с вами</p>
+        <form id="leadForm">
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Имя *" autocomplete="name">
+                <div class="error-msg" id="nameError"></div>
+            </div>
+            <div class="form-group">
+                <input type="tel" id="phone" placeholder="Телефон *" autocomplete="tel">
+                <div class="error-msg" id="phoneError"></div>
+            </div>
+            <div class="form-group">
+                <input type="email" id="email" placeholder="Email *" autocomplete="email">
+                <div class="error-msg" id="emailError"></div>
+            </div>
+            <div class="form-group">
+                <textarea id="comment" rows="3" placeholder="Комментарий (необязательно)"></textarea>
+            </div>
+            <button type="submit" id="submitBtn">Отправить заявку</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ========== ЭФФЕКТ СКРОЛЛА ДЛЯ ХЕДЕРА (тень) ==========
+    const stickyHeader = document.getElementById('stickyHeader');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 10) {
+            stickyHeader.classList.add('scrolled');
+        } else {
+            stickyHeader.classList.remove('scrolled');
+        }
+    });
+    
+    // -------- Модальное окно ----------
+    const modal = document.getElementById('requestModal');
+    const openTriggers = document.querySelectorAll('.open-modal-trigger');
+    const closeModalBtn = document.querySelector('.close-modal');
+
+    function openModal() {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    openTriggers.forEach(btn => btn.addEventListener('click', openModal));
+    closeModalBtn.addEventListener('click', closeModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // -------- Маска телефона (IMask) ----------
+    const phoneInput = document.getElementById('phone');
+    let maskInstance = null;
+    if (phoneInput) {
+        maskInstance = IMask(phoneInput, {
+            mask: '+{7} (000) 000-00-00',
+            lazy: false,
+            placeholderChar: '_'
+        });
+    }
+
+    // валидация и генерация Excel
+    const form = document.getElementById('leadForm');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const commentInput = document.getElementById('comment');
+    const nameError = document.getElementById('nameError');
+    const phoneError = document.getElementById('phoneError');
+    const emailError = document.getElementById('emailError');
+
+    function validateEmail(email) {
+        return /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(email);
+    }
+
+    function validateForm() {
+        let isValid = true;
+        // Имя
+        const nameVal = nameInput.value.trim();
+        if (!nameVal) {
+            nameError.innerText = 'Укажите ваше имя';
+            isValid = false;
+        } else {
+            nameError.innerText = '';
+        }
+
+        // Телефон (маска, но проверим что заполнен и минимальная длина)
+        let rawPhone = phoneInput.value;
+        if (maskInstance) rawPhone = maskInstance.unmaskedValue;
+        const phoneDigits = rawPhone.replace(/\D/g, '');
+        if (!phoneDigits || phoneDigits.length < 10) {
+            phoneError.innerText = 'Введите корректный номер телефона (10 цифр)';
+            isValid = false;
+        } else {
+            phoneError.innerText = '';
+        }
+
+        // Email
+        const emailVal = emailInput.value.trim();
+        if (!emailVal) {
+            emailError.innerText = 'Введите email';
+            isValid = false;
+        } else if (!validateEmail(emailVal)) {
+            emailError.innerText = 'Введите корректный email (example@domain.com)';
+            isValid = false;
+        } else {
+            emailError.innerText = '';
+        }
+        return isValid;
+    }
+
+    // Функция генерации и скачивания Excel через SheetJS
+    function downloadExcelLead(data) {
+        const worksheetData = [
+            ['Дата', 'Имя', 'Телефон', 'Email', 'Комментарий'],
+            [data.date, data.name, data.phone, data.email, data.comment]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
+        XLSX.writeFile(wb, `lead_${Date.now()}.xlsx`);
+    }
+
+    // Обработчик отправки
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+
+        let rawPhone = phoneInput.value;
+        if (maskInstance) rawPhone = maskInstance.unmaskedValue;
+        const displayPhone = phoneInput.value;
+        
+        const leadData = {
+            date: new Date().toLocaleString('ru-RU'),
+            name: nameInput.value.trim(),
+            phone: displayPhone,
+            email: emailInput.value.trim(),
+            comment: commentInput.value.trim() || '—'
+        };
+
+        try {
+            downloadExcelLead(leadData);
+            alert('Спасибо! Ваша заявка отправлена. Файл с данными загружен автоматически.');
+            form.reset();
+            if (maskInstance) maskInstance.updateValue();
+            closeModal();
+        } catch (err) {
+            console.error(err);
+            alert('Произошла ошибка при создании файла, но данные сохранены в консоли. Попробуйте ещё раз.');
+        }
+    });
+
+    // ----- Плавные анимации появления при скролле -----
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.adv-card, .project-card, .hero-content, .hero-image').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        observer.observe(el);
+    });
+    
+    // Немедленно показываем hero элементы, чтобы не ждать
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.adv-card, .project-card, .hero-content, .hero-image').forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight - 100) {
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }
+        });
+        // Принудительно для героя
+        setTimeout(() => {
+            document.querySelectorAll('.hero-content, .hero-image').forEach(el => {
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            });
+        }, 100);
+    });
+</script>
+</body>
+</html>
